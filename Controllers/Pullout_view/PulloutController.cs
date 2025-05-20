@@ -14,6 +14,7 @@ using idigital.Data;
 using idigital.Data.Repositories; 
 using codegen.Helpers; 
 
+/*Pullout controller*/
 
 namespace idigital.Controllers.Pullout_view
 {
