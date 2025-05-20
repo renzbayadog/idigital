@@ -1,0 +1,57 @@
+
+
+@model PulloutVM
+
+<div class="">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Pullout Details</h3>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">               
+                <div class="x_content" style="margin-top:30px;">
+					<dl class="dl-horizontal">
+						<dt>@Html.DisplayNameFor(model => model.PulloutName):</dt>
+						<dd>@Html.DisplayFor(model => model.PulloutName)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.PulloutDescription):</dt>
+						<dd>@Html.DisplayFor(model => model.PulloutDescription)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.PulloutDate):</dt>
+						<dd>@Html.DisplayFor(model => model.PulloutDate)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.SalesId):</dt>
+						<dd>@Html.DisplayFor(model => model.SalesId)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.ReceiptImage):</dt>
+						<dd>@Html.DisplayFor(model => model.ReceiptImage)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.DeliveryId):</dt>
+						<dd>@Html.DisplayFor(model => model.DeliveryId)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.SalesName):</dt>
+						<dd>@Html.DisplayFor(model => model.SalesName)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.SalesDescription):</dt>
+						<dd>@Html.DisplayFor(model => model.SalesDescription)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.DeliveryName):</dt>
+						<dd>@Html.DisplayFor(model => model.DeliveryName)</dd>
+
+						<dt>@Html.DisplayNameFor(model => model.DeliveryAddress):</dt>
+						<dd>@Html.DisplayFor(model => model.DeliveryAddress)</dd>
+
+					</dl>
+					<div>
+						<a href="/Pullout/Update?id=@Model.PulloutId" class="btn btn-primary btn-custom">Update Details</a>
+						<a href="/Pullout/Index" class="btn btn-primary btn-custom">Back To Pullouts</a>
+					</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

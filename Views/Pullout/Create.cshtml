@@ -1,0 +1,110 @@
+
+
+@model PulloutVM
+
+@{
+    ViewData["Title"] = "Create Pullout Page";
+}
+
+<div class="">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Add New Pullout</h3>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">               
+                <div class="x_content Pullout-container">
+                    <div class="row" style="margin-top:30px;">
+                        <form class="form-horizontal form-label-left" id="Pullout-form">                           
+							
+							<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+							    <label asp-for="PulloutName"></label>				
+								<input asp-for="PulloutName" id="js-pulloutname" class="form-control" />
+							    <span asp-validation-for="PulloutName" class="text-danger"></span>
+							</div>
+							<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+							    <label asp-for="PulloutDescription"></label>				
+								<textarea asp-for="PulloutDescription" id="js-pulloutdescription" class="form-control"></textarea>
+							    <span asp-validation-for="PulloutDescription" class="text-danger"></span>
+							</div>
+							<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+							    <label asp-for="PulloutDate"></label>				
+								<input asp-for="PulloutDate" id="js-pulloutdate" class="form-control" />
+							    <span asp-validation-for="PulloutDate" class="text-danger"></span>
+							</div>
+							<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+							    <label asp-for="SalesName"></label>				
+								<select asp-for="SalesId" id="js-salesid" class="form-control" asp-items="ViewBag.SalesName"><option value="">-- Select --</option></select>
+							    <span asp-validation-for="SalesId" class="text-danger"></span>
+							</div>
+							<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+							    <label asp-for="DeliveryName"></label>				
+								<select asp-for="DeliveryId" id="js-deliveryid" class="form-control" asp-items="ViewBag.DeliveryName"><option value="">-- Select --</option></select>
+							    <span asp-validation-for="DeliveryId" class="text-danger"></span>
+							</div>
+							 <div class="col-md-12 col-sm-12 col-xs-12 form-group">
+								<input type="submit" class="btn btn-primary btn-custom" value="Submit">
+								<a href="/Pullout/Index" class="btn btn-primary btn-custom">Cancel</a>
+							 </div>							
+                        </form> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+	<script src="~/js/functions/global.js" asp-append-version="true"></script>
+    <script src="~/js/functions/helper/ajaxhelper.js" asp-append-version="true"></script>
+    <script src="~/js/functions/helper/alertHelper.js" asp-append-version="true"></script>
+
+	<script type="text/javascript">
+        
+        $(document).ready(function () {
+		
+			RemoveLoading();
+
+            $(".Pullout-container").on('submit', '#Pullout-form', function (e) {
+
+                e.preventDefault();
+
+                var PulloutVM = {				
+					PulloutId:$("#js-pulloutid").val(),
+					PulloutName:$("#js-pulloutname").val(),
+					PulloutDescription:$("#js-pulloutdescription").val(),
+					PulloutDate:$("#js-pulloutdate").val(),
+					SalesId:$("#js-salesid").val(),
+					ReceiptImage:$("#js-receiptimage").val(),
+					DeliveryId:$("#js-deliveryid").val(),
+					SalesName:$("#js-salesname").val(),
+					SalesDescription:$("#js-salesdescription").val(),
+					DeliveryName:$("#js-deliveryname").val(),
+					DeliveryAddress:$("#js-deliveryaddress").val()
+                };
+
+			    let apiUrl = "/api/Pullouts/add";
+
+				PostAjax(apiUrl, PulloutVM).done(function(){
+					RemoveLoading();
+					SuccessMessage('Created', 'Record Successfully Created').then((result)=>{
+						window.location.href = '/Pullout/Details/' + 0 + '';	
+					});
+				}).fail(function (errMsg) {		
+					
+					RemoveLoading();
+					ErrorMessage('Error', errMsg.responseText);
+				});                                                   
+            })
+        });
+
+    </script>
+
+}
+
+

@@ -1,0 +1,28 @@
+# Use the official .NET SDK image to build and publish the app
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+
+# Copy csproj and restore as distinct layers
+COPY idigital.csproj ./
+RUN dotnet restore
+
+# Copy the rest of the source code
+COPY . ./
+
+# If you need to install frontend dependencies (optional)
+# RUN apt-get update && apt-get install -y npm
+# RUN npm install
+
+# Publish the application to the /out folder
+RUN dotnet publish -c Release -o /out
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /out ./
+
+# Expose port 80
+EXPOSE 80
+
+# Start the application
+ENTRYPOINT ["dotnet", "idigital.dll"] 

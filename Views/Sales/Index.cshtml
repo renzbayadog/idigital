@@ -1,0 +1,559 @@
+
+
+@model IList<SalesVM>
+
+@{
+    ViewData["Title"] = "Sale Page";
+}
+<!-- page content -->
+<div class="">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Sale List</h3>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_content js-Sale-main-container">
+				
+						<div class="row">
+							<!--BUTTON TOP-->
+							<div class="col-md-12 col-sm-12 col-xs-12">
+								<a href="/Sales/Create" class="btn btn-primary btn-md btn-custom float-left popup"><i class="fa fa-plus"></i> Add New Sale</a>
+								<button class="btn btn-primary btn-custom" id="js-export-Sale"><i class="fa fa-download"></i> Export Record Report</button>
+						</div>
+
+							<div class="col-md-12 col-sm-12 col-xs-12 divider-dashed"></div>
+
+							<!--SEARCH AREA-->
+							<form class="form-horizontal" id="search-Sale-form">
+								<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+									<label>Search by:</label>
+								<input class="form-control" id="js-Keyword-search" />
+								</div>
+								<div class="col-md-12 col-sm-12 col-xs-12">
+									<label>Page Size:</label>
+									<select class="form-control" id="js-page-size">
+										<option disabled>Max rows</option>
+										<option value="10">10</option>
+										<option value="20">20</option>
+										<option value="30">30</option>
+										<option value="40">40</option>
+										<option value="50">50</option>
+										<option value="100">100</option>
+									</select>
+								</div>
+								<div class="col-md-12 col-sm-12 col-xs-12 form-group" style="margin-top:10px;">
+									<button type="submit" class="btn btn-primary btn-custom"><i class="fa fa-search"></i> Search</button>
+								</div>
+							</form>
+                        </div>
+
+						<div class="row">
+
+							<!--BULK BUTTON-->
+							<div class="col-md-12 col-sm-12 col-xs-12" style="display:none" id="js-delete-container">
+								<button class="btn btn-primary btn-md btn-custom fa fa-trash" id="js-delete-bulk">Delete</button>
+							</div>
+
+							<!--DATA TABLE-->
+							<div class="col-md-12 col-sm-12 col-xs-12 js-Sale-list-container">
+								<table class="table table-hover bulk_action" id="js-table-Sale" style="margin-top:10px;">
+									<thead>
+										<tr>
+											<th class="column-title"><input type="checkbox" id="check-all" /></th>
+											<th class="column-title">@Html.DisplayNameFor(model => model[0].SalesName)</th>
+											<th class="column-title">@Html.DisplayNameFor(model => model[0].SalesDescription)</th>
+											<th class="column-title">@Html.DisplayNameFor(model => model[0].SalesDate)</th>
+											<th class="column-title">@Html.DisplayNameFor(model => model[0].BusinessValue)</th>
+											<th class="column-title">@Html.DisplayNameFor(model => model[0].ReceiptImage)</th>
+											<th class="column-title no-link last"><span class="nobr">Action</span></th>
+										</tr>
+									</thead>
+									<tbody id="js-load-Sale-row">										
+                                        <!--LOAD PRODUCTS-->
+									</tbody>
+								</table>
+							</div>
+
+							 <!--PAGINATION AND SUMMARY-->
+							<div class="col-md-12 col-sm-12 col-xs-12 js-pagination-Sale" style="margin-top:-27px;">
+
+								<div id="js-page-history" style="float:left;margin-top:25px;color:#cc503b;">
+									<!--PAGINATION HISTORY-->
+								</div>
+
+								<div style="float:right;margin-top:20px;">
+									<ul class="pagination pagination-md" id="js-ul-pagination">
+										<!--LOAD PAGINATION-->
+									</ul>
+								</div>
+							</div>
+
+						</div>                   
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="Sale-modal" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+
+    @await Html.PartialAsync("_ValidationScriptsPartial")	
+	@await Html.PartialAsync("_CrudFunctionScriptsPartial")
+
+    <script type="text/javascript">
+
+	let modelSearch = {
+			Keyword: null,
+			SortOrder: null,
+			//#jsSearchblock
+	};
+
+    $(document).ready(function () {
+
+			setTimeout(function () {
+				var modelSearch = {}; //BASE ON SEARCH FIELDS
+				loadData(modelSearch, 1, pageSizeRows());
+			}, 500);
+
+			//export
+			$('#js-export-Sale').on('click', function (e) {
+
+				e.preventDefault();
+
+				var pageSize = $(this).val();
+				var currentPage = GetCurrentPagePagination();
+
+				//BASE ON SELECTED SEARCH FELDS
+				modelSearch.Keyword = ($('#js-Keyword-search').val() === '') ? null : $('#js-Keyword-search').val();
+
+				GetAjax('/api/Sales/export/report', modelSearch).done(function (result) {
+					RemoveLoading();
+					window.location.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8;base64,' + result + '';
+				}).fail(function () {
+					RemoveLoading();
+					alert("failed to export excel. please contact administrator");
+				});
+			});
+
+			//SELECT PAGE SIZE
+			$('#js-page-size').on('change', function () {
+				var pageSize = $(this).val();
+				var currentPage = GetPreviousPagination();
+				var modelSearch = {}; //BASE ON SEARCH FIELDS
+				loadData(modelSearch, currentPage, pageSize);
+			});
+
+			//SEARCH BAR
+
+			$("#search-Sale-form").on('submit', function (e) {
+
+				e.preventDefault();
+				var currentPage = GetCurrentPagePagination();
+				var modelSearch = {}; //BASE ON SEARCH FIELDS
+				loadData(modelSearch, currentPage, pageSizeRows());
+			});
+
+			//SORTING
+			$("#js-table-Sale").on('click', '.fa-sort-amount-asc', function () {
+				let sortElementId = '#' + $(this).attr('id') + '';
+				let sortPropertyName = Sorting(sortElementId);
+				alert("sort " + sortPropertyName + '');
+				var modelSearch = {
+					SortOrder: sortPropertyName
+				};
+				var currentPage = GetCurrentPagePagination();
+				loadData(modelSearch, currentPage, pageSizeRows());
+			});
+			
+			$("#js-table-Sale").on('click', '.fa-sort-amount-desc', function () {
+
+				let sortElementId = '#' + $(this).attr('id') + '';
+				let sortPropertyName = Sorting(sortElementId);
+				alert("sort " + sortPropertyName + '');
+				var modelSearch = {
+					SortOrder: sortPropertyName
+				};
+				var currentPage = GetCurrentPagePagination();
+				loadData(modelSearch, currentPage, pageSizeRows());
+			});
+
+            //CLICK PAGINATION
+
+			$(".pagination").on('click', function (event) {
+
+				// Determine the active page index, 
+				var pageIndex = 0;
+				if ($(event.target).parent().attr('id') == 'js-next-btn') { //click next button
+
+					pageIndex = parseInt($(this).parent().find('.active').attr('data-id')) + 1;
+				}
+				else if ($(event.target).parent().attr('id') == 'js-prev-btn') { //click prev button
+					pageIndex = parseInt($(this).parent().find('.active').attr('data-id')) - 1;
+				}
+				else {
+					pageIndex = parseInt($(event.target).parent().attr('data-id'));
+				}
+
+				var currentPage = pageIndex;
+
+				var modelSearch = {}; //BASE ON SEARCH FIELDS
+
+                loadData(modelSearch, currentPage, pageSizeRows());
+			});   
+
+			
+			//EVENT FOR SINGLE CHECK BOX
+            $(".js-Sale-list-container #js-table-Sale").on('change', '.js-chk-bulk', function () {
+
+                var chkDel = $('#js-load-Sale-row input:checked').length;
+
+                var dataId = $(this).attr('data-id');
+
+                var isChecked = $(this).is(':checked');
+
+                var idRow = '#selected-row-' + dataId + '';
+
+                if (isChecked) {
+
+                    $(idRow).addClass('selected');
+
+                } else {
+
+                    $(idRow).removeClass('selected');
+                }
+
+                if (chkDel > 0) {
+                    $("#js-delete-container").show();
+
+                } else {
+
+                    $("#js-delete-container").hide();
+                }
+            });
+
+			//EVENT FOR CHECK ALL CHECKBOX
+            $(".js-Sale-list-container #js-table-Sale").on('change', '#check-all', function () {
+
+                var isChecked = $(this).is(':checked');
+
+                if (isChecked) {
+                    $(".js-chk-bulk").prop("checked", true);
+
+                    $('#js-load-Sale-row input:checked').each(function () {
+
+                        var dataId = $(this).attr('data-id');
+
+                        var idRow = '#selected-row-' + dataId + '';
+
+                        $(idRow).addClass('selected');
+                    });
+
+                    $("#js-delete-container").show();
+
+                } else {
+
+                    $('#js-load-Sale-row input:checked').each(function () {
+
+                        var dataId = $(this).attr('data-id');
+
+                        var idRow = '#selected-row-' + dataId + '';
+
+
+                        $(".js-chk-bulk").prop("checked", false);
+
+
+                        $(idRow).removeClass('selected');
+                    });
+
+                    $("#js-delete-container").hide();
+                }
+            });
+
+			//POP OVER FOR ACTION LINK
+            $("#js-table-Sale").on('click', '.menu_icon', function (e) {
+			    
+                e.preventDefault();
+			    
+				// Ensure that one popover is shown at a time
+				RemovePopover();
+
+                var pId = $(this).attr('data-id');
+
+				var link = '<span><a href="/Sales/Details/' + pId + '" class="popup">Details</a><span> <br /><a href="/Sales/Update?id=' + pId + '" class="popup">Update</a><span> <br /> <span><a href="" id="js-Sale-delete" data-id="' + pId + '">Delete</a></span>';
+
+                ViewActionLink($(this), link, '#js-load-Sale-row');
+            });
+			
+			
+			//=============MODAL IMPLEMENTATION================//
+
+			//VIEW MODAL DETAILS
+			$(".js-Sale-main-container").on('click', '.popup', function (e) {
+				e.preventDefault();
+				openPopup($(this).attr('href'));
+			});
+
+			function openPopup(pageUrl) {
+				var $pageContent = $("<div/>");
+				$pageContent.load(pageUrl, function () {
+					$(".popup-form", $pageContent).removeData('validator');
+					$(".popup-form", $pageContent).removeData('unobtrusiveValidation');
+					$.validator.unobtrusive.parse('form');
+				});
+
+				var myModal = new bootstrap.Modal(document.getElementById('Sale-modal'), {
+					keyboard: false,
+					backdrop: 'static',
+				});
+
+				myModal.toggle();
+				$('.modal-content').html($pageContent);
+			}
+
+			//CREATE
+			$("#Sale-modal .modal-content").on('submit', '#Sale-add-form', function (e) {
+
+				e.preventDefault();
+
+				let SaleVM = {				
+
+					SalesId:$("#js-salesid").val(),
+					SalesName:$("#js-salesname").val(),
+					SalesDescription:$("#js-salesdescription").val(),
+					SalesDate:$("#js-salesdate").val(),
+					BusinessValue:$("#js-businessvalue").val(),
+					ReceiptImage:$("#js-receiptimage").val()
+				};
+
+				let apiUrl = "/api/Sales/add";
+
+				PostAjax(apiUrl, SaleVM).done(function(response){
+					
+					RemoveLoading();
+
+					CloseModal("#Sale-modal");
+
+					SuccessMessage('Created', 'Record Successfully Created');
+
+					var currentPage = GetCurrentPagePagination();
+
+					var modelSearch = {}; //BASE ON SEARCH FIELDS
+
+					loadData(modelSearch, currentPage, pageSizeRows());
+				
+				}).fail(function (errMsg) {			
+				
+					RemoveLoading();
+					ErrorMessage('Error', errMsg.responseText);
+				});			
+			});
+
+			//UPDATE
+			$("#Sale-modal .modal-content").on('submit', '#Sale-update-form', function (e) {
+
+				e.preventDefault();
+
+				let SaleVM = {
+					SalesId:$("#js-salesid").val(),
+					SalesName:$("#js-salesname").val(),
+					SalesDescription:$("#js-salesdescription").val(),
+					SalesDate:$("#js-salesdate").val(),
+					BusinessValue:$("#js-businessvalue").val(),
+					ReceiptImage:$("#js-receiptimage").val()
+				};
+								
+				let apiUrl = "/api/Sales/update";
+
+				PostAjax(apiUrl, SaleVM).done(function(response){
+					
+					RemoveLoading();
+
+					CloseModal("#Sale-modal");
+
+					SuccessMessage('Updated', 'Record Successfully Updated');
+
+					var currentPage = GetCurrentPagePagination();
+
+					var modelSearch = {}; //BASE ON SEARCH FIELDS
+
+					loadData(modelSearch, currentPage, pageSizeRows());
+				
+				}).fail(function (errMsg) {	
+					
+					RemoveLoading();
+					ErrorMessage('Error', errMsg.responseText);
+				});					
+			});
+
+			//DELETE DATA ============
+            $('body').on('click', '#js-Sale-delete', function (e) {
+
+                e.preventDefault();
+
+                let pId = $(this).attr('data-id');
+
+				let conf = ConfirmSwal("You won't be able to revert this!").then((result) => {
+
+					if (result.value) {		
+						let apiUrl = '/api/Sales/' + pId + '/delete';
+
+						DeleteAjax(apiUrl, null).done(function(response){
+							
+
+							SuccessMessage("Deleted", 'Record Successfully Deleted');
+
+							var currentPage = GetCurrentPagePagination();
+
+							var modelSearch = {}; //BASE ON SEARCH FIELDS
+
+							loadData(modelSearch, currentPage, pageSizeRows());
+
+						}).fail(function(errMsg){
+							RemoveLoading();
+							ErrorMessage("Error", errMsg.responseText);
+						});		
+					}
+				});               
+            });
+
+			//BULK DELETE
+            $(".js-Sale-main-container").on('click', "#js-delete-bulk", function () {
+
+                var dataId = [];
+
+                $('#js-load-Sale-row input:checked').each(function () {
+                    dataId.push($(this).attr("data-id"));
+                });
+
+				let conf = ConfirmSwal("You won't be able to revert this!").then((result) => {
+				if (result.value) {
+						
+						let apiUrl = '/api/Sales/delete/bulk';
+						
+						PostAjax(apiUrl, dataId).done(function () {							
+
+							SuccessMessage("Deleted", "Records successfully deleted!");
+							
+							var currentPage = GetCurrentPagePagination();
+
+							var modelSearch = {}; //BASE ON SEARCH FIELDS
+
+							loadData(modelSearch, currentPage, pageSizeRows());
+
+						}).fail(function (errMsg) {
+							RemoveLoading();
+							ErrorMessage('Error', errMsg.responseText);
+						});
+					}
+				});               
+            });
+		});
+
+		//json key converter to lower case
+		function ConvertKeysToLowerCase(obj) {
+
+                var output = {};
+
+                for (i in obj) {
+                    if (Object.prototype.toString.apply(obj[i]) === '[object Object]') {
+                        output[i.toLowerCase()] = ConvertKeysToLowerCase(obj[i]);
+                    } else if (Object.prototype.toString.apply(obj[i]) === '[object Array]') {
+                        output[i.toLowerCase()] = [];
+                        output[i.toLowerCase()].push(ConvertKeysToLowerCase(obj[i][0]));
+                    } else {
+                        output[i.toLowerCase()] = obj[i];
+                    }
+                }
+
+                return output;
+        }
+
+		function pageSizeRows() {
+			return $("#js-page-size").val();
+		}
+
+		 //LOAD DATA
+        function loadData(modelSearch, currentPage, pageSize) {
+				
+				loadingImageTable("#js-table-Sale", "#js-load-Sale-row", "50px");
+
+                var result = false;
+				modelSearch.Keyword = ($('#js-Keyword-search').val() === '') ? null : $('#js-Keyword-search').val();
+				//add additional search fields here if needed
+
+				var apiURL = '/api/Sales/list/page'+currentPage + '/PageSize' + pageSize + '';
+				GetAjax(apiURL, modelSearch, false).done(function(response){
+				
+				$("#js-load-Sale-row").html("");
+					RemoveLoading();
+
+					 var jsonResponse = response;
+						
+                     let pagination = Pagination; //see this in entities folder 
+						 pagination.List = jsonResponse.list;
+						 pagination.CurrentPage = jsonResponse.currentPage;
+						 pagination.PageIndeces = jsonResponse.pageIndices;
+						 pagination.PageSummary = jsonResponse.pageSummary;				
+					 
+					 var listData = [];
+
+					 var j;
+                     for (j = 0; j < pagination.List.length; j++) {
+
+                         var convertedKeyToLower = ConvertKeysToLowerCase(pagination.List[j]);
+                         listData.push(convertedKeyToLower);
+                     }
+
+					 if (listData.length > 0) {
+
+                         var i;
+                         for (i = 0; i < listData.length; i++) {
+
+								//--------------------- BASE ON THE SELECTED COLUMNS ------------------                                
+
+								var tableBody = '<tr id="selected-row-' + listData[i].salesid + '">'
+									tableBody += '<td><input type="checkbox" class="js-chk-bulk" data-id=' + listData[i].salesid + '></td>'
+									tableBody += '<td>' + listData[i].salesname + '</td>'
+									tableBody += '<td>' + listData[i].salesdescription + '</td>'
+									tableBody += '<td>' + listData[i].salesdate + '</td>'
+									tableBody += '<td>' + listData[i].businessvalue + '</td>'
+									tableBody += '<td>' + listData[i].receiptimage + '</td>'
+									tableBody += '<td><a href="/Sales/Details?id=' + listData[i].salesid + '" class="popup"><i class="fa fa-info-circle"></i></a> <a href="/Sales/Update?id=' + listData[i].salesid + '" class="popup"><i class="fa fa-edit"></i></a> <a href="" id="js-Sale-delete" data-id="' + listData[i].salesid + '"><i class="fa fa-trash-o"></i></a></td>'
+								tableBody += '</tr>'
+
+								//--------------------- END -------------------
+	
+                               $("#js-table-Sale #js-load-Sale-row").append(tableBody); //view row data
+                         }
+                     } else {
+                           
+						  $("#js-table-Sale #js-load-Sale-row").append('<tr><td colspan="#ColumnCardinality" class="text-warning">No Records Found</td></tr>');
+                     }
+
+                    //LOAD PAGINATION
+					LoadPagination(pagination.PageIndeces, pagination.CurrentPage);
+
+                    //PAGE HISTORY
+					pageHistory(pagination.PageSummary);
+				
+				}).fail(function (errMsg) {
+					RemoveLoading();
+					ErrorMessage("Error", errMsg.responseText);
+				});               
+         }
+   </script>
+}

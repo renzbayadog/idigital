@@ -1,0 +1,50 @@
+
+
+@model SalesVM
+
+
+@{
+    Layout = null;
+}
+
+<form id="Sale-update-form" class="form-horizontal popup-form" style="padding:15px;">
+    <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">Update Sale Details</h4>
+    </div>  
+    <div class="modal-body" style="padding:15px;">
+        <input type="hidden" asp-for="SalesId" id=js-salesid />
+		
+		<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+		    <label asp-for="SalesName"></label>				
+			<input asp-for="SalesName" id="js-salesname" class="form-control" />
+		    <span asp-validation-for="SalesName" class="text-danger"></span>
+		</div>
+		<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+		    <label asp-for="SalesDescription"></label>				
+			<textarea asp-for="SalesDescription" id="js-salesdescription" class="form-control"></textarea>
+		    <span asp-validation-for="SalesDescription" class="text-danger"></span>
+		</div>
+		<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+		    <label asp-for="SalesDate"></label>				
+			<input asp-for="SalesDate" id="js-salesdate" class="form-control" />
+		    <span asp-validation-for="SalesDate" class="text-danger"></span>
+		</div>
+		<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+		    <label asp-for="BusinessValue"></label>				
+			<input asp-for="BusinessValue" id="js-businessvalue" class="form-control" />
+		    <span asp-validation-for="BusinessValue" class="text-danger"></span>
+		</div>
+		<div class="col-md-12 col-sm-12 col-xs-12 form-group">
+		    <label asp-for="ReceiptImage"></label>				
+			<input asp-for="ReceiptImage" id="js-receiptimage" class="form-control" />
+		    <span asp-validation-for="ReceiptImage" class="text-danger"></span>
+		</div>
+    </div>
+	<div class="col-md-12 col-sm-12 col-xs-12">
+		<div class="modal-footer">
+				<button type="submit" class="btn btn-primary btn-custom" style="margin-top:10px"><i class="fa fa-save"></i> Save</button>
+			<button type="button" class="btn btn-primary btn-custom" data-bs-dismiss="modal" style="margin-top:10px"><i class="fa fa-close"></i> Cancel</button>
+		</div>
+	</div>
+</form>
+
